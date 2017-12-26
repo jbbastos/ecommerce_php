@@ -6,6 +6,7 @@ use \Slim\Slim;
 use \Hcode\Page;
 use \Hcode\PageAdmin;
 use \Hcode\Model\User;
+use Hcode\Model\Category;
 
 $app = new Slim();
 
@@ -171,9 +172,104 @@ $app->get("/admin/forgot/reset", function () {
     ]);
     
     $page->setTpl("forgot-reset", array(
-        "name"=>$user["desperson"],
-        "code"=>$_GET["code"]
+        "name" => $user["desperson"],
+        "code" => $_GET["code"]
     ));
+});
+
+$app->post("/admin/forgot/reset", function () {
+    
+    $forgot = User::validForgotDecrypt($_POST["code"]);
+    
+    User::setForgotUsed($forgot["idrecovery"]);
+    
+    $user = new User();
+    
+    $user->get((int)$forgot["iduser"]);
+    
+    $password = password_hash($_POST["password"], PASSWORD_DEFAULT, [
+        "cost"=>12
+    ]);
+    
+    $user->setPassword($password);
+    
+    $page = new PageAdmin([
+        "header" => false,
+        "footer" => false
+    ]);
+    
+    $page->setTpl("forgot-reset-success");
+});
+
+// Rota do listar categorias
+$app->get("/admin/categories", function () {
+    
+    User::verifyLogin();
+    
+    $categories = Category::listAll();
+    $page = new PageAdmin();
+    $page->setTpl("categories", [
+        'categories' => $categories
+    ]);
+});
+
+// Rota para acessar tela cadastrar categorias
+$app->get("/admin/categories/create", function () {
+    
+    User::verifyLogin();
+    
+    $page = new PageAdmin();
+    $page->setTpl("categories-create");
+});
+
+// Rota para cadastrar categorias
+$app->post("/admin/categories/create", function () {
+    
+    User::verifyLogin();
+    
+    $category = new Category();
+    $category->setData($_POST);
+    $category->save();
+    header('Location: /admin/categories');
+    exit();
+});
+
+// Rota para deletar categorias
+$app->get("/admin/categories/:idcategory/delete", function ($idcategory) {
+    
+    User::verifyLogin();
+    
+    $category = new Category();
+    $category->get((int) $idcategory);
+    $category->delete();
+    header('Location: /admin/categories');
+    exit();
+});
+
+// Rota para tela de editar categorias
+$app->get("/admin/categories/:idcategory", function ($idcategory) {
+    
+    User::verifyLogin();
+    
+    $category = new Category();
+    $category->get((int) $idcategory);
+    $page = new PageAdmin();
+    $page->setTpl("categories-update", [
+        'category' => $category->getValues()
+    ]);
+});
+
+// Rota para editar categorias
+$app->post("/admin/categories/:idcategory", function ($idcategory) {
+    
+    User::verifyLogin();
+    
+    $category = new Category();
+    $category->get((int) $idcategory);
+    $category->setData($_POST);
+    $category->save();
+    header('Location: /admin/categories');
+    exit();
 });
 
 $app->run();
