@@ -5,7 +5,7 @@ use Rain\Tpl;
 class Mailer
 {
     const USERNAME = "jessicabarros@gmail.com";
-    const PASSWORD = "22052003"; // ALTERAR A SENHA QUANDO FOR TESTAR
+    const PASSWORD = ""; // ALTERAR A SENHA QUANDO FOR TESTAR
     const NAME_FROM = "Hcode Store";
     
     private $mail;
